@@ -9,6 +9,10 @@ var createBrowserHistory = require('history/lib/createBrowserHistory');
 
 var h = require('./helpers');
 
+//firebase//
+var Rebase = require('re-base');
+var base = Rebase.createClass('https://fishbitches.firebaseio.com/');
+
 /*
   App
 */
@@ -20,6 +24,22 @@ var App = React.createClass({
       order : {}
     }
   }, 
+  componentDidMount : function () {
+  	base.syncState(this.props.params.storeID+'/fishes', {
+  		context: this,
+  		state: 'fishes'
+  	});
+  	var localStorageRef = localStorage.getItem('order-'+ this.props.params.storeId);
+  	if(localStorage){
+  		//Update our component state to reflect what is in storage//
+  		this.setState({
+  			order: JSON.parse(localStorageRef)
+  		});
+  	}
+  },
+  componentWillUpdate: function(nextProps,nextState){
+  	localStorage.setItem('order-'+ this.props.params.storeId, JSON.stringify(nextState.order));
+  },
   addFish : function(fish) {
     var timestamp = (new Date()).getTime();
     // update the state object
@@ -154,7 +174,7 @@ var Order = React.createClass({
   		return <li key={key}> Sorry, fish no longer available> </li>
   	}
   	return (
-  		<li>
+  		<li key={key}>
   			<span>{count} </span>lbs 
   			{fish.name}
   			<span className="price">{h.formatPrice(count * fish.price)}</span>
